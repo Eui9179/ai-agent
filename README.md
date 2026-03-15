@@ -165,16 +165,12 @@ curl -X POST http://localhost:8080/api/rag/chat \
 
 ### 8. LLM 교체
 ChatClient가 추상화되어서 Spring bean에서 주입하기 때문에 LLM 의존성만 변경해주면 된다.
-┌──────────────────┬──────────────────────────────────────────┐
-│       LLM        │                Starter                   │
-├──────────────────┼──────────────────────────────────────────┤
-│ Ollama (현재)     │ spring-ai-starter-model-ollama           │
-├──────────────────┼──────────────────────────────────────────┤
-│ OpenAI           │ spring-ai-starter-model-openai           │
-├──────────────────┼──────────────────────────────────────────┤
-│ Anthropic Claude │ spring-ai-starter-model-anthropic        │
-├──────────────────┼──────────────────────────────────────────┤
-│ Google Gemini    │ spring-ai-starter-model-vertex-ai-gemini │
-├──────────────────┼──────────────────────────────────────────┤
-│ Azure OpenAI     │ spring-ai-starter-model-azure-openai     │
-└──────────────────┴──────────────────────────────────────────┘
+
+| LLM | Starter |
+|------|------|
+| Ollama (현재) | spring-ai-starter-model-ollama |
+| OpenAI | spring-ai-starter-model-openai |
+| Azure OpenAI | spring-ai-starter-model-azure-openai |
+| Anthropic Claude | spring-ai-starter-model-anthropic |
+| Google Gemini | spring-ai-starter-model-vertex-ai-gemini |
+
