@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Docker Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e1a;
+    color: #e2e8f0;
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #38bdf8;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .subtitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 48px;
+    text-align: center;
+  }
+
+  /* Main diagram container */
+  .diagram {
+    width: 100%;
+    max-width: 960px;
+    position: relative;
+  }
+
+  /* Docker Compose outer box */
+  .docker-compose {
+    border: 2px solid #1e40af;
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    background: rgba(30, 64, 175, 0.05);
+    box-shadow: 0 0 60px rgba(30, 64, 175, 0.15), inset 0 0 60px rgba(30, 64, 175, 0.03);
+  }
+
+  .docker-compose-label {
+    position: absolute;
+    top: -14px;
+    left: 24px;
+    background: #0a0e1a;
+    padding: 2px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #60a5fa;
+    border: 1px solid #1e40af;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .docker-compose-label::before {
+    content: '🐳';
+    font-size: 14px;
+  }
+
+  /* Docker network inner */
+  .docker-network {
+    border: 1px dashed rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .network-label {
+    position: absolute;
+    top: -11px;
+    left: 16px;
+    background: #0a0e1a;
+    padding: 1px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #64748b;
+    border-radius: 10px;
+  }
+
+  /* Services grid */
+  .services {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  /* Service card */
+  .service {
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .service:hover {
+    transform: translateY(-3px);
+  }
+
+  /* Spring Boot */
+  .service-spring {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(16, 185, 129, 0.05));
+    border: 1.5px solid rgba(34, 197, 94, 0.4);
+    box-shadow: 0 4px 24px rgba(34, 197, 94, 0.08);
+    grid-column: 1 / -1;
+  }
+
+  /* Qdrant */
+  .service-qdrant {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.05));
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 24px rgba(239, 68, 68, 0.08);
+  }
+
+  /* Ollama */
+  .service-ollama {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(139, 92, 246, 0.05));
+    border: 1.5px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 4px 24px rgba(168, 85, 247, 0.08);
+  }
+
+  /* Claude (external) */
+  .service-claude {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.08), rgba(249, 115, 22, 0.05));
+    border: 1.5px solid rgba(251, 146, 60, 0.4);
+    box-shadow: 0 4px 24px rgba(251, 146, 60, 0.08);
+  }
+
+  .service-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .service-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .icon-spring { background: rgba(34, 197, 94, 0.15); }
+  .icon-qdrant { background: rgba(239, 68, 68, 0.15); }
+  .icon-ollama { background: rgba(168, 85, 247, 0.15); }
+  .icon-claude { background: rgba(251, 146, 60, 0.15); }
+
+  .service-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+
+  .service-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .service-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* For Spring Boot - horizontal layout */
+  .service-spring .service-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .info-block {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .info-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  .port-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .port-spring { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .port-qdrant { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .port-ollama { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    color: #94a3b8;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Arrow section */
+  .arrows-section {
+    margin: 24px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .flow-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .flow-title {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #cbd5e1;
+  }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .num-blue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56,189,248,0.4); }
+  .num-purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.4); }
+
+  .arrow-right {
+    color: #475569;
+    font-size: 10px;
+  }
+
+  /* External section */
+  .external-section {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .external-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #475569;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .external-label::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #475569 0, #475569 4px, transparent 4px, transparent 8px);
+  }
+
+  .external-service {
+    flex: 1;
+    border: 1.5px dashed rgba(251, 146, 60, 0.4);
+    border-radius: 12px;
+    padding: 16px 20px;
+    background: rgba(251, 146, 60, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ext-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(251, 146, 60, 0.15);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .ext-info .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fb923c;
+  }
+
+  .ext-info .desc {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  /* Volume section */
+  .volumes {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .volumes-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .volume-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  .volume-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* SVG arrows */
+  .connections {
+    width: 100%;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .connection-diagram {
+    margin: 28px 0;
+    position: relative;
+  }
+
+  /* Animated pulse */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<h1>Infrastructure Design</h1>
+<div class="subtitle">RAG 시스템 Docker 구성도</div>
+
+<div class="diagram">
+
+  <!-- Docker Compose Box -->
+  <div class="docker-compose">
+    <div class="docker-compose-label">docker-compose.yml</div>
+
+    <!-- Docker Network -->
+    <div class="docker-network">
+      <div class="network-label">rag-network (bridge)</div>
+
+      <!-- Services Grid -->
+      <div class="services">
+
+        <!-- Spring Boot -->
+        <div class="service service-spring">
+          <div class="service-header">
+            <div class="service-icon icon-spring">🍃</div>
+            <div>
+              <div class="service-name">spring-app</div>
+              <div class="service-desc">메인 애플리케이션 서버</div>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+              <span class="live-dot"></span>
+              <span class="port-badge port-spring">:8080</span>
+            </div>
+          </div>
+          <div class="service-body">
+            <div class="info-block">
+              <div class="info-label">Framework</div>
+              <div class="info-value">Spring Boot 3.x</div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">AI Library</div>
+              <div class="info-value">Spring AI 1.x</div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Image</div>
+              <div class="info-value">eclipse-temurin:21</div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="tag">RAG Pipeline</span>
+            <span class="tag">Vector Search</span>
+            <span class="tag">Document Ingestion</span>
+            <span class="tag">Claude API Client</span>
+            <span class="tag">REST API</span>
+          </div>
+        </div>
+
+        <!-- Qdrant -->
+        <div class="service service-qdrant" style="grid-column: span 1;">
+          <div class="service-header">
+            <div class="service-icon icon-qdrant">🔴</div>
+            <div>
+              <div class="service-name">qdrant</div>
+              <div class="service-desc">벡터 데이터베이스</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="info-block">
+              <div class="info-label">Image</div>
+              <div class="info-value">qdrant/qdrant:latest</div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <span class="port-badge port-qdrant">:6333 REST</span>
+              <span class="port-badge port-qdrant">:6334 gRPC</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <span class="tag">Vector Storage</span>
+              <span class="tag">ANN Search</span>
+              <span class="tag">Payload Filter</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ollama -->
+        <div class="service service-ollama" style="grid-column: span 2;">
+          <div class="service-header">
+            <div class="service-icon icon-ollama">🦙</div>
+            <div>
+              <div class="service-name">ollama</div>
+              <div class="service-desc">BGE-M3 임베딩 서버</div>
+            </div>
+            <span class="port-badge port-ollama" style="margin-left: auto;">:11434</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="info-block">
+              <div class="info-label">Embedding Model</div>
+              <div class="info-value">BAAI/bge-m3</div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">Image</div>
+              <div class="info-value">ollama/ollama:latest</div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="tag">한국어 최적화</span>
+            <span class="tag">1024-dim Vector</span>
+            <span class="tag">OpenAI 호환 API</span>
+            <span class="tag">GPU/CPU 지원</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Volumes -->
+      <div class="volumes">
+        <div class="volumes-title">💾 Volumes</div>
+        <div class="volume-item">
+          <div class="volume-dot" style="background: #f87171;"></div>
+          qdrant_storage → /qdrant/storage
+        </div>
+        <div class="volume-item">
+          <div class="volume-dot" style="background: #c084fc;"></div>
+          ollama_data → /root/.ollama
+        </div>
+        <div class="volume-item">
+          <div class="volume-dot" style="background: #4ade80;"></div>
+          ./app.jar → /app.jar
+        </div>
+      </div>
+    </div>
+
+    <!-- External Claude API -->
+    <div class="external-section">
+      <div class="external-label">외부 API</div>
+      <div class="external-service">
+        <div class="ext-icon">🤖</div>
+        <div class="ext-info">
+          <div class="name">Claude API (Anthropic)</div>
+          <div class="desc">api.anthropic.com — LLM 추론 · 답변 생성 · claude-3-5-sonnet</div>
+        </div>
+        <div style="margin-left: auto;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fb923c; border: 1px solid rgba(251,146,60,0.3); padding: 3px 8px; border-radius: 4px;">HTTPS</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Flow diagrams -->
+  <div class="arrows-section" style="margin-top: 28px;">
+
+    <!-- Indexing flow -->
+    <div class="flow-card">
+      <div class="flow-title">📥 문서 인덱싱 Flow</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-num num-blue">1</div>
+          <span>문서 업로드 (PDF, TXT, DOCX)</span>
+        </div>
+        <div class="flow-step" style="padding-left: 4px; color: #475569; font-size: 11px;">↓ Spring App → 텍스트 청킹</div>
+        <div class="flow-step">
+          <div class="step-num num-blue">2</div>
+          <span>Ollama BGE-M3 → 벡터 변환</span>
+        </div>
+        <div class="flow-step" style="padding-left: 4px; color: #475569; font-size: 11px;">↓ 1024-dim 벡터 반환</div>
+        <div class="flow-step">
+          <div class="step-num num-blue">3</div>
+          <span>Qdrant → 벡터 + 메타데이터 저장</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query flow -->
+    <div class="flow-card">
+      <div class="flow-title">🔍 질의응답 Flow</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-num num-purple">1</div>
+          <span>사용자 질문 입력</span>
+        </div>
+        <div class="flow-step" style="padding-left: 4px; color: #475569; font-size: 11px;">↓ Ollama BGE-M3 → 질문 벡터화</div>
+        <div class="flow-step">
+          <div class="step-num num-purple">2</div>
+          <span>Qdrant → 유사 문서 Top-K 검색</span>
+        </div>
+        <div class="flow-step" style="padding-left: 4px; color: #475569; font-size: 11px;">↓ 컨텍스트 + 질문 조합</div>
+        <div class="flow-step">
+          <div class="step-num num-purple">3</div>
+          <span>Claude API → 최종 답변 생성</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Port summary -->
+  <div style="margin-top: 8px; padding: 16px 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 1px;">포트 요약</span>
+    <span class="port-badge port-spring">Spring :8080</span>
+    <span class="port-badge port-qdrant">Qdrant :6333</span>
+    <span class="port-badge port-qdrant">Qdrant Dashboard :6333/dashboard</span>
+    <span class="port-badge port-ollama">Ollama :11434</span>
+  </div>
+
+</div>
+
+</body>
+</html>
