@@ -2,10 +2,10 @@
 
 ## 프로젝트 개요
 
-**RAG Server** - Spring AI 기반 RAG(Retrieval-Augmented Generation) 서버
+**RAG Server** - LangChain4j 기반 RAG(Retrieval-Augmented Generation) 서버
 
 - **Java**: 21
-- **Framework**: Spring Boot 4.0.3, Spring AI 2.0.0-M2
+- **Framework**: Spring Boot 3.4.3, LangChain4j 0.36.2
 
 ## 시스템 아키텍처
 *rag-architecture.html 참고
@@ -20,7 +20,7 @@
     ↓
 [Chunking] LangChain4j DocumentSplitters.recursive(500, 50)
     ↓
-[Embedding] Ollama + BAAI/bge-m3 (Spring AI VectorStore가 자동 처리)
+[Embedding] Ollama + BAAI/bge-m3 (LangChain4j EmbeddingModel → EmbeddingStore)
     ↓
 [VectorDB] Qdrant
     ↑
@@ -35,14 +35,13 @@
 
 | 구분 | 기술 |
 |------|------|
-| LLM | Ollama (`spring-ai-starter-model-ollama`) |
-| Embedding 모델 | BAAI/bge-m3 (via Ollama) |
-| Vector Store | Qdrant (`spring-ai-starter-vector-store-qdrant`) |
+| LLM | Ollama (`langchain4j-ollama` → `OllamaChatModel`) |
+| Embedding 모델 | BAAI/bge-m3 (`langchain4j-ollama` → `OllamaEmbeddingModel`) |
+| Vector Store | Qdrant (`langchain4j-qdrant` → `QdrantEmbeddingStore`) |
+| RAG 파이프라인 | LangChain4j `AiServices` + `EmbeddingStoreContentRetriever` |
+| 문서 파싱 | LangChain4j + Apache Tika (`langchain4j-document-parser-apache-tika`) |
+| 문서 청킹 | LangChain4j `DocumentSplitters.recursive` |
 | Web | Spring MVC (`spring-boot-starter-web`) |
-| 문서 파싱/청킹 | LangChain4j + Apache Tika (`langchain4j`, `langchain4j-document-parser-apache-tika`) |
-| AI Advisor | `spring-ai-advisors-vector-store` |
-| OCR | PaddleOCR (별도 서비스) |
-| Chunking | LangChain (별도 서비스) |
 | Boilerplate | Lombok |
 
 ## 외부 의존 서비스
@@ -129,7 +128,7 @@ com.leui.rag/
 
 ### 1. Anti-Hallucination (최신 API 검증)
 Spring AI, LangChain4j 코드를 작성할 때는 **반드시 공식 문서를 먼저 검색**한다.
-- Spring AI 2.x는 아직 마일스톤 버전으로 API가 수시로 변경됨
+- Spring AI 1.x는 GA 버전으로 안정적이나, 2.x 마이그레이션 시 API 변경 주의
 - `WebSearch` 또는 `WebFetch`로 아래 문서를 선행 확인한다:
     - Spring AI: `https://docs.spring.io/spring-ai/reference/`
     - LangChain4j: `https://docs.langchain4j.dev/`
