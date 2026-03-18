@@ -10,7 +10,7 @@ description = 'RAG Server'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 
@@ -32,6 +32,9 @@ dependencies {
 	implementation 'dev.langchain4j:langchain4j-ollama-spring-boot-starter:1.12.2-beta22'
 	implementation 'dev.langchain4j:langchain4j-qdrant:1.12.2-beta22'
 	implementation 'dev.langchain4j:langchain4j-document-parser-apache-tika:1.12.2-beta22'
+
+	// Swagger UI (springdoc-openapi v2)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

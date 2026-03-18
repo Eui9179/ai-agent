@@ -119,8 +119,40 @@ com.leui.rag/
 
 ## TODO
 1. ~~LangChain Java, Spring boot와 연동~~ ✅ LangChain4j 통합 완료 (문서 파싱/청킹 파이프라인)
-2. LLM을 활용하여 파일 텍스트 추출
-   1. 각 파일 확장자 별로 처리 방식을 따로 가져갈지?
+2. 문서 업로드 & 파싱
+    - PDF(스캔 등)
+    - HWP
+    - Excel 표
+3. 청킹 & 임베딩
+    - 중복 데이터 처리
+
+      Metadata에 해시 값 저장 (파일 이름 등)
+
+    - 청크 사이즈
+
+      너무 크면 노이즈, 너무 작으면 컨텍스트 부족
+
+    - 메타데이터 설계
+
+        ```jsx
+        Metadata.from(Map.of(
+            "source",      "인사규정_2024.pdf",
+            "department",  "인사팀",
+            "page",        "3",
+            "uploaded_at", "2024-01-15",
+            "doc_hash",    "abc123..."
+        ))
+        ```
+
+4. 질의 & 답변 생성
+    - 질문과 문서 표현 방식의 괴리
+        - Query Rewriting
+        - HyDE
+        - Hybrid Search (Dense, Sparse 동시 검색)
+    - Hallucination 방지
+        - System Prompt
+    - 출처 표시
+5. 비동기 처리
 
 ---
 
