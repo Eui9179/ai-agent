@@ -27,11 +27,12 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// LangChain4j - 문서 파싱/청킹/LLM/벡터스토어
-	implementation 'dev.langchain4j:langchain4j:1.12.2'
-	implementation 'dev.langchain4j:langchain4j-ollama-spring-boot-starter:1.12.2-beta22'
-	implementation 'dev.langchain4j:langchain4j-qdrant:1.12.2-beta22'
-	implementation 'dev.langchain4j:langchain4j-document-parser-apache-tika:1.12.2-beta22'
+	// LangChain4j BOM - 버전 통합 관리
+	implementation platform('dev.langchain4j:langchain4j-bom:1.12.2')
+	implementation 'dev.langchain4j:langchain4j'
+	implementation 'dev.langchain4j:langchain4j-ollama-spring-boot-starter'
+	implementation 'dev.langchain4j:langchain4j-qdrant'
+	implementation 'dev.langchain4j:langchain4j-document-parser-apache-tika'
 
 	// Swagger UI (springdoc-openapi v2)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
