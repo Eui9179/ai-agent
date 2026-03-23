@@ -1,5 +1,7 @@
 package com.leui.rag.domain.chat.service;
 
+import dev.langchain4j.service.Result;
+
 public interface RagAssistant {
-    String chat(String userMessage);
+    Result<String> chat(String userMessage);
 }

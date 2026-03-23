@@ -1,5 +1,18 @@
 # CLAUDE.md
 
+## 참고 문서
+
+| 문서 | 내용 |
+|------|------|
+| [.claude/docs/api.md](.claude/docs/api.md) | API 엔드포인트 스펙, 요청/응답 형식, 청크 메타데이터 |
+| [.claude/docs/conventions.md](.claude/docs/conventions.md) | 패키지 구조, Lombok 사용법, 설정 외부화 규칙 |
+| [.claude/docs/skills.md](.claude/docs/skills.md) | 엔드포인트 추가, 설정 추가 등 반복 작업 레시피 |
+| [.claude/docs/langchain4j.md](.claude/docs/langchain4j.md) | LangChain4j 컴포넌트 사용 패턴, PDFBox API |
+| [.claude/docs/infrastructure.md](.claude/docs/infrastructure.md) | 서비스 포트, Qdrant/Ollama 설정, Docker Compose |
+| [.claude/docs/status.md](.claude/docs/status.md) | 구현 완료 목록, 미구현 예정 기능, 알려진 버그, 설계 결정 사항 |
+
+---
+
 ## 프로젝트 개요
 
 **RAG Server** - LangChain4j 기반 RAG(Retrieval-Augmented Generation) 서버
